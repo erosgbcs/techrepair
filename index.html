@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TECHBUILDERS — Phone Repair Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1c;--card:#141c2e;--card2:#1a2438;
+  --line:rgba(255,255,255,.1);--txt:#eef3fb;--muted:#8b9bb8;
+  --blue:#3b82f6;--blue2:#6366f1;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--txt);line-height:1.55;
+  min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:60px;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(700px 400px at 50% -5%, rgba(59,130,246,.18), transparent 70%);
+}
+.wrap{max-width:680px;margin:0 auto;padding:0 18px;position:relative;z-index:1}
+
+header{text-align:center;padding:38px 0 22px}
+header .brand-logo{
+  width:88px;height:88px;object-fit:contain;margin:0 auto 16px;
+  display:block;border-radius:20px;background:rgba(255,255,255,.05);
+  padding:10px;border:1px solid var(--line);
+}
+header h1{
+  font-size:clamp(1.7rem,5vw,2.2rem);font-weight:800;
+  letter-spacing:-.03em;line-height:1.15;margin-bottom:8px;
+}
+header h1 span{
+  background:linear-gradient(120deg,#60a5fa,#a78bfa);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+header p{color:var(--muted);font-size:.95rem;max-width:400px;margin:0 auto}
+
+.sync-status{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.75rem;font-weight:700;padding:6px 13px;
+  border-radius:999px;margin-top:14px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);
+  transition:.2s;
+}
+.sync-status .dot{width:7px;height:7px;border-radius:50%;background:#64748b}
+.sync-status.loading{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.1);color:#93c5fd}
+.sync-status.loading .dot{background:var(--blue);animation:pulse 1.2s infinite}
+.sync-status.online{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.1);color:#86efac}
+.sync-status.online .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+.sync-status.offline{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1);color:#fcd34d}
+.sync-status.offline .dot{background:var(--amber)}
+.sync-status.error{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#fca5a5}
+.sync-status.error .dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:20px;padding:24px 20px;margin-bottom:18px;
+}
+@media(min-width:640px){.card{padding:28px}}
+
+.step{margin-bottom:22px}
+.step:last-child{margin-bottom:0}
+.step-label{display:flex;align-items:center;gap:10px;font-size:.95rem;font-weight:700;margin-bottom:12px}
+.step-num{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:800;
+}
+
+input[type="text"],input[type="tel"],input[type="email"],
+input[type="number"],input[type="date"],textarea{
+  width:100%;padding:14px 16px;border-radius:12px;
+  background:rgba(255,255,255,.05);border:1.5px solid var(--line);
+  color:var(--txt);font-size:1rem;outline:none;transition:.15s;color-scheme:dark;
+}
+textarea{resize:vertical;min-height:70px;line-height:1.5;font-size:.95rem}
+input:focus,textarea:focus{
+  border-color:var(--blue);background:rgba(59,130,246,.08);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+}
+input::placeholder,textarea::placeholder{color:#5b6b88}
+.gap-sm{display:grid;gap:10px;margin-top:10px}
+.amount-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.amount-prefix{font-size:1.4rem;font-weight:800;color:var(--blue);font-family:'JetBrains Mono',monospace;padding-left:4px}
+input.amount{font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;text-align:right;padding:14px 16px}
+
+.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+@media(max-width:420px){.chips{grid-template-columns:1fr}}
+.chip{
+  cursor:pointer;border:1.5px solid var(--line);background:rgba(255,255,255,.04);
+  color:var(--txt);padding:13px 14px;border-radius:12px;font-size:.88rem;
+  font-weight:600;transition:.15s;text-align:left;display:flex;
+  align-items:center;gap:9px;font-family:inherit;
+}
+.chip:hover{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.06)}
+.chip.on{
+  background:linear-gradient(135deg,rgba(59,130,246,.25),rgba(99,102,241,.25));
+  border-color:var(--blue);color:#dbeafe;
+  box-shadow:0 0 0 1px rgba(59,130,246,.4) inset;
+}
+.chip .ico{font-size:1.15rem;flex-shrink:0}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;cursor:pointer;border:none;font-family:inherit;
+  padding:17px 22px;border-radius:14px;font-weight:800;font-size:1.05rem;
+  transition:.15s;letter-spacing:-.01em;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 10px 28px rgba(59,130,246,.35)}
+.btn-primary:hover{box-shadow:0 14px 34px rgba(59,130,246,.5)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.btn-soft{background:rgba(255,255,255,.06);color:var(--txt);border:1.5px solid var(--line);font-size:.95rem;padding:14px 18px}
+.btn-soft:hover{background:rgba(255,255,255,.1)}
+.btn-green{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 10px 28px rgba(34,197,94,.3)}
+.btn-green:hover{box-shadow:0 14px 34px rgba(34,197,94,.45)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+
+.welcome{
+  text-align:center;padding:26px 20px;color:var(--muted);
+  border:2px dashed var(--line);border-radius:20px;background:rgba(255,255,255,.02);
+}
+.welcome .big{font-size:2.4rem;margin-bottom:10px}
+.welcome p{font-size:.92rem;max-width:320px;margin:0 auto}
+
+#result{display:none;margin-top:6px}
+#result.show{display:block;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.success-banner{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(34,197,94,.12);border:1.5px solid rgba(34,197,94,.4);
+  border-radius:14px;padding:14px 18px;margin-bottom:16px;
+  font-weight:700;color:#86efac;font-size:.95rem;
+}
+.success-banner .check{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:var(--green);color:#fff;display:grid;place-items:center;
+  font-size:.9rem;font-weight:800;
+}
+
+.receipt{
+  background:#fff;color:#0f172a;width:100%;
+  padding:26px 22px 22px;border-radius:14px;
+  font-family:'Inter',sans-serif;font-size:12.5px;line-height:1.5;
+  box-shadow:0 16px 40px rgba(0,0,0,.5);
+}
+.r-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.r-brand{display:flex;gap:11px;align-items:flex-start}
+.r-logo{width:56px;height:56px;flex-shrink:0;object-fit:contain;border-radius:10px}
+.r-shop{font-size:16px;font-weight:800;letter-spacing:-.4px;color:#0b1220;line-height:1.15;text-transform:uppercase}
+.r-sub{font-size:10.5px;color:#64748b;margin-top:3px}
+.r-stamp{
+  border:2px solid #16a34a;color:#16a34a;font-weight:800;font-size:10px;
+  letter-spacing:1.2px;padding:3px 9px;border-radius:6px;
+  transform:rotate(-6deg);white-space:nowrap;
+}
+.r-rule{border-top:1px dashed #cbd5e1;margin:13px 0}
+.r-rule.solid{border-top:1.5px solid #0f172a;margin:10px 0}
+.r-meta{display:flex;justify-content:space-between;gap:12px}
+.r-meta span{display:block;color:#64748b;font-size:9.5px;letter-spacing:.7px;text-transform:uppercase;font-weight:700}
+.r-meta b{font-family:'JetBrains Mono',monospace;font-size:12px;color:#0f172a}
+.r-meta > div:last-child{text-align:right}
+.r-cols{display:flex;gap:14px}
+.r-cols > div{flex:1;min-width:0}
+.r-sec-h{font-size:9.5px;letter-spacing:.9px;text-transform:uppercase;color:#64748b;font-weight:800;margin-bottom:5px}
+.r-cols p{font-size:11.5px;color:#1e293b;line-height:1.55;word-break:break-word}
+.r-cols p b{color:#0f172a;font-weight:700}
+.r-block p{font-size:11.5px;color:#1e293b;line-height:1.6;margin-bottom:3px}
+.r-block p b{color:#0f172a;font-weight:700}
+.r-total{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;padding:6px 0}
+.r-total span:first-child{font-size:12px;letter-spacing:.8px;color:#0f172a}
+.r-total span:last-child{font-size:22px;color:#0f172a;font-family:'JetBrains Mono',monospace}
+.r-warranty{background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:11px 13px;margin:4px 0}
+.r-warranty-head{font-size:11px;font-weight:800;color:#15803d;letter-spacing:.3px;margin-bottom:5px}
+.r-warranty p{font-size:10.5px;color:#166534;line-height:1.55}
+.r-warranty p b{color:#14532d}
+.r-terms{font-size:9.5px;color:#64748b;line-height:1.6}
+.r-terms b{color:#475569}
+.r-thanks{text-align:center;font-size:11.5px;font-weight:800;color:#0f172a;margin-top:13px;letter-spacing:-.2px}
+.r-thanks small{display:block;font-weight:500;color:#94a3b8;font-size:9.5px;margin-top:3px}
+.r-barcode{
+  margin-top:11px;height:30px;
+  background:repeating-linear-gradient(90deg,#0f172a 0 2px,transparent 2px 4px,#0f172a 4px 5px,transparent 5px 9px);
+  opacity:.85;
+}
+
+.list-title{display:flex;justify-content:space-between;align-items:center;margin:32px 0 14px;gap:12px}
+.list-title h2{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+.list-title .count{
+  font-size:.78rem;color:var(--muted);background:rgba(255,255,255,.06);
+  padding:4px 11px;border-radius:999px;font-weight:700;
+}
+.rec{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:16px 18px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;gap:14px;transition:.15s;
+}
+.rec:hover{border-color:rgba(59,130,246,.4);background:var(--card2)}
+.rec-info{min-width:0;flex:1}
+.rec-client{font-size:.78rem;color:var(--blue);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-dev{font-weight:800;font-size:.98rem;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-svc{font-size:.8rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-date{font-size:.72rem;color:#5b6b88;margin-top:4px;font-family:'JetBrains Mono',monospace}
+.rec-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.rec-amt{font-weight:800;color:var(--blue);font-size:1.05rem;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.rec-actions{display:flex;gap:6px}
+.rec-actions button{
+  cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.05);
+  color:var(--txt);padding:6px 12px;border-radius:8px;
+  font-size:.75rem;font-weight:700;font-family:inherit;transition:.15s;
+}
+.rec-actions button:hover{background:rgba(59,130,246,.2);border-color:var(--blue)}
+.rec-actions .del:hover{background:rgba(248,113,113,.2);border-color:#f87171;color:#fca5a5}
+.rec .cloud-tag{
+  display:inline-block;font-size:.68rem;color:#86efac;
+  background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);
+  padding:1px 7px;border-radius:999px;margin-left:6px;font-weight:700;
+}
+.empty-rec{
+  border:2px dashed var(--line);border-radius:14px;
+  padding:34px 20px;text-align:center;color:var(--muted);font-size:.88rem;
+}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+  background:#1e293b;border:1.5px solid var(--blue);color:var(--txt);
+  padding:13px 22px;border-radius:12px;font-size:.9rem;font-weight:600;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;
+  transition:.25s;z-index:200;max-width:90vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media print{
+  body{background:#fff;padding:0}
+  body *{visibility:hidden}
+  #receipt,#receipt *{visibility:visible}
+  #receipt{position:absolute;left:0;top:0;width:100%;border-radius:0;box-shadow:none;padding:0}
+  .no-print{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <img src="techbuilders.png" alt="TECHBUILDERS" class="brand-logo"
+         onerror="this.style.display='none'">
+    <h1>TECH<span>BUILDERS</span></h1>
+    <p>Log a repair, get a receipt with a 1-week warranty.</p>
+    <div class="sync-status loading" id="syncStatus">
+      <span class="dot"></span>
+      <span id="syncText">Connecting to Firebase…</span>
+    </div>
+  </header>
+
+  <div class="card no-print">
+
+    <div class="step">
+      <div class="step-label"><span class="step-num">1</span> Who's the client?</div>
+      <input type="text" id="client" placeholder="Client name" autocomplete="off">
+      <div class="gap-sm">
+        <input type="tel" id="clientPhone" placeholder="Phone number (optional)" autocomplete="off">
+        <input type="email" id="clientEmail" placeholder="Email (optional)" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-label"><span class="step-num">2</span> What phone?</div>
+      <input type="text" id="device" placeholder="e.g. iPhone 13 Pro" autocomplete="off">
+    </div>
+
+    <div class="step">
+      <div class="step-label"><span class="step-num">3</span> What did you fix?</div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-label"><span class="step-num">4</span> How much?</div>
+      <div class="amount-row">
+        <span class="amount-prefix">₱</span>
+        <input type="number" id="amount" class="amount" placeholder="0.00" min="0" step="0.01" value="">
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-label"><span class="step-num">5</span> When? (optional note)</div>
+      <input type="date" id="date" style="margin-bottom:10px">
+      <textarea id="note" placeholder="Any notes about the repair… (optional)"></textarea>
+    </div>
+
+    <button class="btn btn-primary" id="makeBtn" style="margin-top:6px">
+      🧾 Create Receipt
+    </button>
+
+  </div>
+
+  <div class="welcome no-print" id="welcome">
+    <div class="big">👋</div>
+    <p>Fill in the steps above and tap <strong>Create Receipt</strong>. Your receipt will appear right here.</p>
+  </div>
+
+  <div id="result">
+    <div class="success-banner no-print">
+      <span class="check">✓</span>
+      Receipt ready — download it or save it below.
+    </div>
+
+    <div class="receipt" id="receipt"></div>
+
+    <div class="btn-row no-print">
+      <button class="btn btn-green" id="dlBtn">⬇ Download PNG</button>
+      <button class="btn btn-soft" id="printBtn">🖨 Print / PDF</button>
+    </div>
+    <button class="btn btn-soft no-print" id="saveBtn" style="margin-top:10px">
+      💾 Save to My Log
+    </button>
+  </div>
+
+  <div class="list-title no-print">
+    <h2>My Saved Repairs</h2>
+    <span class="count" id="recCount">0</span>
+  </div>
+
+  <div id="records" class="no-print"></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- html2canvas for PNG export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- =========================================================
+     🔥 FIREBASE SDK — v10 modular via CDN
+     Your real config is wired in below.
+     ========================================================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* =========================================================
+   YOUR FIREBASE CONFIG
+   ========================================================= */
+const firebaseConfig = {
+  apiKey:            "AIzaSyCuWqtSX6o7RMtc0WDTt2m9vn0jJv15yQc",
+  authDomain:        "techrepairs.firebaseapp.com",
+  projectId:         "techrepairs",
+  storageBucket:     "techrepairs.firebasestorage.app",
+  messagingSenderId: "1047791469156",
+  appId:             "1:1047791469156:web:527189df5bf48d6591d571"
+};
+
+let db = null;
+let fb = null;
+
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  fb = { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, serverTimestamp };
+  console.log("✅ Firebase connected to project: techrepairs");
+} catch (err) {
+  console.warn("❌ Firebase init failed:", err);
+}
+
+/* Expose handles to the classic script below */
+window.TB_FIREBASE = {
+  ready: !!db,
+  db,
+  fb,
+  error: !db ? "Firebase failed to initialize" : null
+};
+
+/* Fire an event so the main script can react as soon as Firebase is ready */
+window.dispatchEvent(new Event("firebase-ready"));
+</script>
+
+<!-- =========================================================
+     MAIN APP SCRIPT
+     ========================================================= -->
+<script>
+/* =========================================================
+   ⚙️ SETTINGS — TECHBUILDERS
+   ========================================================= */
+const SETTINGS = {
+  logName:      'TECHBUILDERS',
+  initials:     'TB',
+  logo:         'techbuilders.png',
+  currency:     '₱',
+  warrantyDays: 7
+};
+
+const REPAIRS = [
+  { name:'Screen Replacement',  price:2500, icon:'📱' },
+  { name:'Battery Replacement', price:1200, icon:'🔋' },
+  { name:'Charging Port',       price:900,  icon:'🔌' },
+  { name:'Back Glass',          price:1500, icon:'🪟' },
+  { name:'Camera',              price:1800, icon:'📷' },
+  { name:'Speaker / Mic',       price:850,  icon:'🔊' },
+  { name:'Water Damage',        price:2000, icon:'💧' },
+  { name:'Software / Reset',    price:600,  icon:'⚙️' },
+  { name:'Motherboard',         price:3500, icon:'🧠' },
+  { name:'Data Recovery',       price:2200, icon:'💾' },
+  { name:'Other Repair',        price:0,    icon:'🔧' }
+];
+
+const STORE_KEY = 'techbuilders.repairLog.v1';
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const money = n =>
+  SETTINGS.currency + (Number(n)||0).toLocaleString('en-PH', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function todayISO(){
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+}
+function parseDate(str){
+  const [y,m,dd] = String(str).split('-').map(Number);
+  return new Date(y, m-1, dd);
+}
+function fmtDate(d){
+  return d.toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'2-digit'});
+}
+function addDays(d,n){ const c=new Date(d); c.setDate(c.getDate()+n); return c; }
+function makeNo(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return `TB-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${Math.floor(1000+Math.random()*9000)}`;
+}
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* =========================================================
+   State
+   ========================================================= */
+let picked = [];
+let currentNo = '';
+let records = [];
+let currentRecord = null;
+let usingCloud = false;
+
+/* =========================================================
+   Sync status UI
+   ========================================================= */
+function setSyncStatus(state, text){
+  const el = $('#syncStatus');
+  el.className = 'sync-status ' + state;
+  $('#syncText').textContent = text;
+}
+
+/* =========================================================
+   Init
+   ========================================================= */
+function init(){
+  document.title = 'TECHBUILDERS — Phone Repair Log';
+
+  $('#chips').innerHTML = REPAIRS.map((r,i) => `
+    <button type="button" class="chip" data-i="${i}">
+      <span class="ico">${r.icon}</span> ${esc(r.name)}
+    </button>
+  `).join('');
+
+  $('#chips').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    chip.classList.toggle('on');
+    picked = [...document.querySelectorAll('.chip.on')].map(c => REPAIRS[+c.dataset.i]);
+
+    const sum = picked.reduce((a,r)=>a+r.price, 0);
+    const amountInput = $('#amount');
+    if(sum > 0 && (!amountInput.value || amountInput.dataset.auto === '1')){
+      amountInput.value = sum.toFixed(2);
+      amountInput.dataset.auto = '1';
+    }
+  });
+
+  $('#amount').addEventListener('input', e => e.target.dataset.auto = '0');
+  $('#date').value = todayISO();
+
+  $('#makeBtn').addEventListener('click', makeReceipt);
+  $('#dlBtn').addEventListener('click', downloadPNG);
+  $('#printBtn').addEventListener('click', () => window.print());
+  $('#saveBtn').addEventListener('click', saveCurrent);
+
+  // Load local cache first (instant)
+  try{ records = JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ records = []; }
+  if(!Array.isArray(records)) records = [];
+  renderRecords();
+
+  // Wait for Firebase to be ready
+  window.addEventListener('firebase-ready', onFirebaseReady);
+  // Fallback in case event fired before this script ran
+  setTimeout(() => {
+    if(window.TB_FIREBASE) onFirebaseReady();
+  }, 300);
+}
+
+/* =========================================================
+   Firebase ready handler
+   ========================================================= */
+async function onFirebaseReady(){
+  const fbState = window.TB_FIREBASE;
+  if(!fbState || !fbState.ready){
+    setSyncStatus('error', 'Firebase not connected — running local only');
+    usingCloud = false;
+    return;
+  }
+
+  usingCloud = true;
+  setSyncStatus('loading', 'Loading records from cloud…');
+
+  try{
+    const { collection, getDocs, query, orderBy } = fbState.fb;
+    const q = query(collection(fbState.db, 'repairs'), orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+
+    const cloudRecords = [];
+    snap.forEach(d => {
+      const data = d.data();
+      // Convert Firestore Timestamp → plain string (not needed downstream)
+      cloudRecords.push({ id: d.id, ...data });
+    });
+
+    // Merge: cloud is source of truth. Keep local-only ones (never synced).
+    const cloudNos = new Set(cloudRecords.map(r => r.no));
+    const localOnly = records.filter(r => !cloudNos.has(r.no) && String(r.id || '').startsWith('local-'));
+    records = [...localOnly, ...cloudRecords];
+
+    cacheLocal();
+    renderRecords();
+    setSyncStatus('online', `Cloud sync active · ${records.length} record${records.length === 1 ? '' : 's'}`);
+    if(cloudRecords.length > 0) toast('Cloud records loaded.');
+  }catch(err){
+    console.error('Cloud load failed:', err);
+    setSyncStatus('error', 'Cloud read failed — check Firestore rules');
+    usingCloud = false;
+  }
+}
+
+/* =========================================================
+   Create receipt
+   ========================================================= */
+function makeReceipt(){
+  const client = $('#client').value.trim();
+  const device = $('#device').value.trim();
+  const amount = parseFloat($('#amount').value) || 0;
+
+  if(!client){ toast('Please enter the client name.'); $('#client').focus(); return; }
+  if(!device){ toast('Please enter the phone name.'); $('#device').focus(); return; }
+  if(picked.length === 0){ toast('Please pick at least one repair.'); return; }
+  if(amount <= 0){ toast('Please enter the amount.'); $('#amount').focus(); return; }
+
+  currentNo = makeNo();
+  currentRecord = {
+    no: currentNo,
+    date: $('#date').value || todayISO(),
+    client,
+    clientPhone: $('#clientPhone').value.trim(),
+    clientEmail: $('#clientEmail').value.trim(),
+    device,
+    repairs: picked.map(r => r.name),
+    amount,
+    note: $('#note').value.trim()
+  };
+
+  $('#receipt').innerHTML = buildReceipt(currentRecord);
+  $('#welcome').style.display = 'none';
+  $('#result').classList.add('show');
+  $('#result').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* =========================================================
+   Build receipt HTML
+   ========================================================= */
+function buildReceipt(d){
+  const dateObj = parseDate(d.date);
+  const wEnd    = addDays(dateObj, SETTINGS.warrantyDays);
+  const contactLines = [d.clientPhone, d.clientEmail].filter(Boolean).map(esc).join('<br>');
+
+  return `
+    <div class="r-top">
+      <div class="r-brand">
+        <img src="${esc(SETTINGS.logo)}" alt="${esc(SETTINGS.logName)}" class="r-logo"
+             onerror="this.outerHTML='&lt;div style=&quot;width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0&quot;&gt;TB&lt;/div&gt;'">
+        <div>
+          <div class="r-shop">${esc(SETTINGS.logName)}</div>
+          <div class="r-sub">Phone repair receipt</div>
+        </div>
+      </div>
+      <div class="r-stamp">REPAIRED</div>
+    </div>
+
+    <div class="r-rule"></div>
+
+    <div class="r-meta">
+      <div><span>Receipt No.</span><b>${esc(d.no)}</b></div>
+      <div><span>Date</span><b>${esc(fmtDate(dateObj))}</b></div>
+    </div>
+
+    <div class="r-rule"></div>
+
+    <div class="r-cols">
+      <div>
+        <div class="r-sec-h">Client</div>
+        <p><b>${esc(d.client)}</b>${contactLines ? '<br>' + contactLines : ''}</p>
+      </div>
+      <div>
+        <div class="r-sec-h">Device</div>
+        <p><b>${esc(d.device)}</b></p>
+      </div>
+    </div>
+
+    <div class="r-rule"></div>
+
+    <div class="r-block">
+      <div class="r-sec-h">Repair Performed</div>
+      ${d.repairs.map(r => `<p>• ${esc(r)}</p>`).join('')}
+      ${d.note ? `<p style="margin-top:6px"><b>Notes:</b> ${esc(d.note)}</p>` : ''}
+    </div>
+
+    <div class="r-rule solid"></div>
+
+    <div class="r-total">
+      <span>TOTAL</span>
+      <span>${money(d.amount)}</span>
+    </div>
+
+    <div class="r-rule"></div>
+
+    <div class="r-warranty">
+      <div class="r-warranty-head">✔ 1-WEEK WARRANTY INCLUDED</div>
+      <p>Covered until <b>${esc(fmtDate(wEnd))}</b> (7 days from repair date).</p>
+      <p>Covers the repair(s) listed above only. Void if the device is opened by a third party, physically damaged, or exposed to liquid.</p>
+    </div>
+
+    <div class="r-rule"></div>
+
+    <div class="r-terms">
+      <b>Warranty terms:</b> 7 days from the repair date. Covers the listed repair only. New physical or liquid damage is not covered.
+    </div>
+
+    <div class="r-barcode"></div>
+
+    <div class="r-thanks">
+      Thank you, ${esc(d.client)}!
+      <small>TECHBUILDERS · Keep this receipt to claim your 7-day warranty.</small>
+    </div>
+  `;
+}
+
+/* =========================================================
+   Download PNG
+   ========================================================= */
+async function downloadPNG(){
+  const el = $('#receipt');
+  if(!el || !el.innerHTML.trim()){ toast('Create a receipt first.'); return; }
+
+  const btn = $('#dlBtn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Rendering…';
+
+  try{
+    if(typeof html2canvas === 'undefined') throw new Error('offline');
+    const canvas = await html2canvas(el, {
+      scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false
+    });
+    const a = document.createElement('a');
+    a.download = `TECHBUILDERS-Receipt-${currentNo}.png`;
+    a.href = canvas.toDataURL('image/png');
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast('Picture receipt downloaded.');
+  }catch(err){
+    console.error(err);
+    alert('Could not render the image. Use "Print / PDF" instead.');
+  }finally{
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+/* =========================================================
+   Save record (local + cloud)
+   ========================================================= */
+async function saveCurrent(){
+  if(!currentRecord){ toast('Create a receipt first.'); return; }
+
+  // 1) Local first (instant feedback)
+  const existingIdx = records.findIndex(r => r.no === currentRecord.no);
+  if(existingIdx > -1){
+    records[existingIdx] = { ...records[existingIdx], ...currentRecord };
+  }else{
+    records.unshift({ ...currentRecord, id: 'local-' + Date.now() });
+  }
+  cacheLocal();
+  renderRecords();
+
+  // 2) Cloud
+  if(usingCloud && window.TB_FIREBASE && window.TB_FIREBASE.ready){
+    try{
+      const { collection, addDoc, serverTimestamp } = window.TB_FIREBASE.fb;
+
+      // Strip out the local id — Firestore generates its own
+      const { id, ...dataToSave } = currentRecord;
+      const payload = { ...dataToSave, createdAt: serverTimestamp() };
+
+      const ref = await addDoc(
+        collection(window.TB_FIREBASE.db, 'repairs'),
+        payload
+      );
+
+      // Update in-memory copy with the real Firestore id
+      const idx = records.findIndex(r => r.no === currentRecord.no);
+      if(idx > -1){
+        records[idx].id = ref.id;
+        cacheLocal();
+        renderRecords();
+      }
+
+      setSyncStatus('online', `Cloud sync active · ${records.length} record${records.length === 1 ? '' : 's'}`);
+      toast('Saved & synced to cloud ☁️');
+    }catch(err){
+      console.error('Cloud save failed:', err);
+      toast('Saved locally — cloud sync failed.');
+    }
+  }else{
+    toast('Saved locally.');
+  }
+}
+
+/* Delete from both stores */
+async function deleteRecord(rec){
+  if(!confirm('Delete this saved repair?')) return;
+
+  // Local
+  records = records.filter(r => r.no !== rec.no);
+  cacheLocal();
+  renderRecords();
+
+  // Cloud
+  if(usingCloud && rec.id && !String(rec.id).startsWith('local-') && window.TB_FIREBASE){
+    try{
+      const { doc, deleteDoc } = window.TB_FIREBASE.fb;
+      await deleteDoc(doc(window.TB_FIREBASE.db, 'repairs', rec.id));
+      toast('Deleted from cloud ☁️');
+      return;
+    }catch(err){
+      console.warn('Cloud delete failed:', err);
+      toast('Deleted locally — cloud delete failed.');
+      return;
+    }
+  }
+  toast('Deleted.');
+}
+
+function cacheLocal(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(records)); }catch(e){}
+}
+
+/* =========================================================
+   Render saved list
+   ========================================================= */
+function renderRecords(){
+  $('#recCount').textContent = records.length;
+
+  if(records.length === 0){
+    $('#records').innerHTML = `<div class="empty-rec">No saved repairs yet.</div>`;
+    return;
+  }
+
+  $('#records').innerHTML = records.map((r,i) => {
+    const svc = (r.repairs || []).join(' · ');
+    const cloud = usingCloud && r.id && !String(r.id).startsWith('local-');
+    return `
+      <div class="rec">
+        <div class="rec-info">
+          <div class="rec-client">👤 ${esc(r.client || 'No client')}${cloud ? '<span class="cloud-tag">☁️ synced</span>' : ''}</div>
+          <div class="rec-dev">${esc(r.device)}</div>
+          <div class="rec-svc">${esc(svc)}</div>
+          <div class="rec-date">${esc(fmtDate(parseDate(r.date)))}</div>
+        </div>
+        <div class="rec-right">
+          <div class="rec-amt">${money(r.amount)}</div>
+          <div class="rec-actions">
+            <button data-open="${i}">Open</button>
+            <button data-del="${i}" class="del">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  $('#records').querySelectorAll('[data-open]').forEach(b => {
+    b.addEventListener('click', () => loadRecord(records[+b.dataset.open]));
+  });
+  $('#records').querySelectorAll('[data-del]').forEach(b => {
+    b.addEventListener('click', () => deleteRecord(records[+b.dataset.del]));
+  });
+}
+
+/* Load a saved record back into the form */
+function loadRecord(r){
+  $('#client').value = r.client || '';
+  $('#clientPhone').value = r.clientPhone || '';
+  $('#clientEmail').value = r.clientEmail || '';
+  $('#device').value = r.device;
+  $('#amount').value = Number(r.amount).toFixed(2);
+  $('#amount').dataset.auto = '0';
+  $('#date').value = r.date;
+  $('#note').value = r.note || '';
+
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  picked = [];
+  (r.repairs || []).forEach(name => {
+    const i = REPAIRS.findIndex(x => x.name === name);
+    if(i > -1){
+      const chip = document.querySelector(`.chip[data-i="${i}"]`);
+      if(chip){ chip.classList.add('on'); picked.push(REPAIRS[i]); }
+    }
+  });
+
+  currentNo = r.no;
+  currentRecord = r;
+
+  $('#receipt').innerHTML = buildReceipt(r);
+  $('#welcome').style.display = 'none';
+  $('#result').classList.add('show');
+  $('#result').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
